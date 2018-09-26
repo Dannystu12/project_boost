@@ -64,6 +64,9 @@ public class Rocket : MonoBehaviour
 
         switch(collision.gameObject.tag)
         {
+            case "Landing Pad":
+                FindObjectOfType<SceneLoader>().LoadNextScene();
+                break;
             case "Friendly":
                 print("OK");
                 break;
@@ -72,14 +75,6 @@ public class Rocket : MonoBehaviour
                 break;
         }
 
-        if(collision.gameObject.tag == "Friendly")
-        {
-            print("OK");
-        }
-        else
-        {
-            print("DEAD");
-        }
     }
 }
  
