@@ -11,17 +11,28 @@ public class Rocket : MonoBehaviour
 
     Rigidbody rigidBody;
     AudioSource sfxThruster;
+    State state = State.Alive;
+    SceneLoader sceneLoader;
+
+    enum State
+    {
+        Alive,
+        Dying,
+        Transcending
+    }
 
     // Use this for initialization
     void Start()
     {
         rigidBody = GetComponent<Rigidbody>();
         sfxThruster = GetComponent<AudioSource>();
+        sceneLoader = FindObjectOfType<SceneLoader>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (state != State.Alive) return;
         Thrust();
         Rotate();
     }
@@ -61,17 +72,18 @@ public class Rocket : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-
+        if (state != State.Alive) return;
         switch(collision.gameObject.tag)
         {
             case "Landing Pad":
-                FindObjectOfType<SceneLoader>().LoadNextScene();
+                sceneLoader.Invoke("LoadNextScene", 1f);
+                state = State.Transcending;
                 break;
             case "Friendly":
-                print("OK");
                 break;
             default:
-                print("Dead");
+                state = State.Dying;
+                sceneLoader.Invoke("ResetLevel", 1f);
                 break;
         }
 
