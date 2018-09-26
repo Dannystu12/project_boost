@@ -13,17 +13,16 @@ public class Rocket : MonoBehaviour
     [SerializeField] AudioClip sfxDeath;
     [SerializeField] AudioClip sfxWin;
 
+    [SerializeField] ParticleSystem particlesThrust;
+    [SerializeField] ParticleSystem particlesDeath;
+    [SerializeField] ParticleSystem particlesWin;
+
     Rigidbody rigidBody;
     AudioSource audioSource;
     State state = State.Alive;
     SceneLoader sceneLoader;
 
-    enum State
-    {
-        Alive,
-        Dying,
-        Transcending
-    }
+    enum State { Alive, Dying, Transcending }
 
     // Use this for initialization
     void Start()
@@ -51,6 +50,7 @@ public class Rocket : MonoBehaviour
         else if (audioSource.isPlaying)
         {
             audioSource.Stop();
+            particlesThrust.Stop();
         }
     }
 
@@ -61,6 +61,11 @@ public class Rocket : MonoBehaviour
         if (!audioSource.isPlaying || audioSource.clip != sfxThrust)
         {
             PlayAudio(sfxThrust, true);
+        }
+
+        if(!particlesThrust.isPlaying)
+        {
+            particlesThrust.Play();
         }
     }
 
@@ -98,19 +103,29 @@ public class Rocket : MonoBehaviour
 
     private void StartDeathSequence()
     {
+        if(particlesThrust.isPlaying)
+        {
+            particlesThrust.Stop();
+        }
         state = State.Dying;
         sceneLoader.Invoke("ResetLevel", 1f);
         PlayAudio(sfxDeath, false);
+        particlesDeath.Play();
     }
 
     private void StartSuccessSequence()
     {
+        if (particlesThrust.isPlaying)
+        {
+            particlesThrust.Stop();
+        }
         sceneLoader.Invoke("LoadNextScene", 1f);
         state = State.Transcending;
         PlayAudio(sfxWin, false);
+        particlesWin.Play();
     }
 
-    private void PlayAudio(AudioClip clip, Boolean looping)
+    private void PlayAudio(AudioClip clip, bool looping)
     {
         if(audioSource.isPlaying)
         {
