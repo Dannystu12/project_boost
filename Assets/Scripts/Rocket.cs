@@ -9,8 +9,12 @@ public class Rocket : MonoBehaviour
     [SerializeField] float rcsThrust = 200f;
     [SerializeField] float mainThrust = 200f;
 
+    [SerializeField] AudioClip sfxThrust;
+    [SerializeField] AudioClip sfxDeath;
+    [SerializeField] AudioClip sfxWin;
+
     Rigidbody rigidBody;
-    AudioSource sfxThruster;
+    AudioSource audioSource;
     State state = State.Alive;
     SceneLoader sceneLoader;
 
@@ -25,7 +29,7 @@ public class Rocket : MonoBehaviour
     void Start()
     {
         rigidBody = GetComponent<Rigidbody>();
-        sfxThruster = GetComponent<AudioSource>();
+        audioSource = GetComponent<AudioSource>();
         sceneLoader = FindObjectOfType<SceneLoader>();
     }
 
@@ -33,29 +37,34 @@ public class Rocket : MonoBehaviour
     void Update()
     {
         if (state != State.Alive) return;
-        Thrust();
-        Rotate();
+        RespondToThrustInput();
+        ResponToRotateInput();
     }
 
 
-    private void Thrust()
+    private void RespondToThrustInput()
     {
         if (Input.GetKey(KeyCode.Space))
         {
-            float thrustThisFrame = mainThrust * Time.deltaTime;
-            rigidBody.AddRelativeForce(Vector3.up * thrustThisFrame);
-            if (!sfxThruster.isPlaying)
-            {
-                sfxThruster.Play();
-            }
+            EngageThrust();
         }
-        else if (sfxThruster.isPlaying)
+        else if (audioSource.isPlaying)
         {
-            sfxThruster.Stop();
+            audioSource.Stop();
         }
     }
 
-    private void Rotate()
+    private void EngageThrust()
+    {
+        float thrustThisFrame = mainThrust * Time.deltaTime;
+        rigidBody.AddRelativeForce(Vector3.up * thrustThisFrame);
+        if (!audioSource.isPlaying || audioSource.clip != sfxThrust)
+        {
+            PlayAudio(sfxThrust, true);
+        }
+    }
+
+    private void ResponToRotateInput()
     {
         rigidBody.freezeRotation = true; // take manual control of rotation
         float rotationThisFrame = rcsThrust * Time.deltaTime;
@@ -76,17 +85,42 @@ public class Rocket : MonoBehaviour
         switch(collision.gameObject.tag)
         {
             case "Landing Pad":
-                sceneLoader.Invoke("LoadNextScene", 1f);
-                state = State.Transcending;
+                StartSuccessSequence();
                 break;
             case "Friendly":
                 break;
             default:
-                state = State.Dying;
-                sceneLoader.Invoke("ResetLevel", 1f);
+                StartDeathSequence();
                 break;
         }
 
+    }
+
+    private void StartDeathSequence()
+    {
+        state = State.Dying;
+        sceneLoader.Invoke("ResetLevel", 1f);
+        PlayAudio(sfxDeath, false);
+    }
+
+    private void StartSuccessSequence()
+    {
+        sceneLoader.Invoke("LoadNextScene", 1f);
+        state = State.Transcending;
+        PlayAudio(sfxWin, false);
+    }
+
+    private void PlayAudio(AudioClip clip, Boolean looping)
+    {
+        if(audioSource.isPlaying)
+        {
+            audioSource.Stop();
+        }
+
+        audioSource.clip = clip;
+        audioSource.loop = looping;
+
+        audioSource.Play();
     }
 }
  
