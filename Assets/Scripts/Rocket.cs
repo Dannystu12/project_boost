@@ -20,9 +20,6 @@ public class Rocket : MonoBehaviour
     [SerializeField] ParticleSystem particlesDeath;
     [SerializeField] ParticleSystem particlesWin;
 
-    [Header("Debug")]
-    [SerializeField] bool debugMode = false;
-
     Rigidbody rigidBody;
     AudioSource audioSource;
     State state = State.Alive;
@@ -43,7 +40,7 @@ public class Rocket : MonoBehaviour
     void Update()
     {
         if (state != State.Alive) return;
-        if(debugMode) RespondToDebugInput();
+        if(Debug.isDebugBuild) RespondToDebugInput();
         RespondToThrustInput();
         ResponToRotateInput();
     }
@@ -90,7 +87,7 @@ public class Rocket : MonoBehaviour
 
     private void ResponToRotateInput()
     {
-        rigidBody.freezeRotation = true; // take manual control of rotation
+        rigidBody.angularVelocity = Vector3.zero;
         float rotationThisFrame = rcsThrust * Time.deltaTime;
         if (Input.GetKey(KeyCode.A))
         {
@@ -100,7 +97,6 @@ public class Rocket : MonoBehaviour
         {
             transform.Rotate(-Vector3.forward * rotationThisFrame); ;
         }
-        rigidBody.freezeRotation = false; // return control to engine
     }
 
     private void OnCollisionEnter(Collision collision)
